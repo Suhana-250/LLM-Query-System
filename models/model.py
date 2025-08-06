@@ -1,19 +1,20 @@
 import os
 import tempfile
 import requests
+import gc
 from PyPDF2 import PdfReader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from groq import Groq
 from dotenv import load_dotenv
-import gc
+
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# Use HuggingFace model for embeddings (Open-source, free)
+# ✅ Load embeddings only once to avoid reloading
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 def download_pdf(url: str) -> str:
@@ -29,7 +30,9 @@ def extract_text_from_pdf(file_path: str) -> str:
     reader = PdfReader(file_path)
     text = ""
     for page in reader.pages:
-        text += page.extract_text() or ""
+        page_text = page.extract_text()
+        if page_text:
+            text += page_text
     return text
 
 def get_faiss_vectorstore(text: str):
@@ -49,7 +52,7 @@ Question:
 Answer:"""
 
     response = groq_client.chat.completions.create(
-        model="llama3-70b-8192",  # or another Groq-supported model
+        model="llama3-70b-8192",
         messages=[
             {"role": "system", "content": "You are an expert document assistant."},
             {"role": "user", "content": prompt}
@@ -64,8 +67,12 @@ def answer_questions(url: str, questions: list[str]) -> list[str]:
     print("📑 Extracting text from:", pdf_path)
     text = extract_text_from_pdf(pdf_path)
 
-    print("✂️ Splitting text...")
+    print("✂️ Splitting text and building vectorstore...")
     vectordb = get_faiss_vectorstore(text)
+
+    # Free memory from raw text
+    del text
+    gc.collect()
 
     answers = []
     for q in questions:
@@ -77,9 +84,18 @@ def answer_questions(url: str, questions: list[str]) -> list[str]:
         answer = generate_answer_with_groq(context, q)
         answers.append(answer)
 
+        # Free memory after each question
+        del docs, context, answer
+        gc.collect()
+
     print("✅ All answers generated.")
-    del model
+
+    # Final cleanup
+    del vectordb
     gc.collect()
 
-    return answers
+    # Delete temporary PDF
+    if os.path.exists(pdf_path):
+        os.remove(pdf_path)
 
+    return answers
