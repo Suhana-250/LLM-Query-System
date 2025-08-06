@@ -1,2 +1,3 @@
+# railway.toml (MUST be in project root)
 [build]
-dockerfile = "Dockerfile"
+builder = "docker"
