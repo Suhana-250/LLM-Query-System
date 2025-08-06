@@ -3,7 +3,6 @@ __pycache__/
 *.pyo
 *.pyd
 *.log
-.env
 .git
 .gitignore
 *.md
