@@ -7,7 +7,7 @@ from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from groq import Groq
 from dotenv import load_dotenv
-
+import gc
 load_dotenv()
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
@@ -78,5 +78,8 @@ def answer_questions(url: str, questions: list[str]) -> list[str]:
         answers.append(answer)
 
     print("✅ All answers generated.")
+    del model
+    gc.collect()
+
     return answers
 
