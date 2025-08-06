@@ -58,15 +58,25 @@ Answer:"""
     return response.choices[0].message.content.strip()
 
 def answer_questions(url: str, questions: list[str]) -> list[str]:
+    print("📄 Downloading PDF from:", url)
     pdf_path = download_pdf(url)
+    
+    print("📑 Extracting text from:", pdf_path)
     text = extract_text_from_pdf(pdf_path)
+
+    print("✂️ Splitting text...")
     vectordb = get_faiss_vectorstore(text)
 
     answers = []
     for q in questions:
+        print("🤖 Question:", q)
         docs = vectordb.similarity_search(q, k=3)
         context = "\n\n".join([doc.page_content for doc in docs])
+        print("📚 Context length:", len(context))
+
         answer = generate_answer_with_groq(context, q)
         answers.append(answer)
 
+    print("✅ All answers generated.")
     return answers
+
