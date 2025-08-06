@@ -38,3 +38,6 @@ def custom_openapi():
     return app.openapi_schema
 
 app.openapi = custom_openapi
+@app.get("/")
+def root():
+    return {"message": "LLM Query System is running 🚀"}
