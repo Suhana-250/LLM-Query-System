@@ -1,10 +1,9 @@
 fastapi
 uvicorn
-requests
+python-dotenv
 PyPDF2
+sentence-transformers
 langchain
 langchain-community
 faiss-cpu
-sentence-transformers
 groq
-python-dotenv
