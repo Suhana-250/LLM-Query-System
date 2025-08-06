@@ -1,7 +1,9 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 PyPDF2
-sentence-transformers
 faiss-cpu
 groq
+sentence-transformers==2.2.2
+transformers==4.30.2
+torch==2.0.1

@@ -1,31 +1,21 @@
-# Use a lightweight base image
-FROM python:3.10-slim
+FROM python:3.10
 
-# Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender-dev \
-    && rm -rf /var/lib/apt/lists/*
-
-# Set work directory
 WORKDIR /app
 
-# Copy requirements and install
 COPY requirements.txt .
+
+# ✅ CPU-only PyTorch
+RUN pip install torch==2.0.1+cpu torchvision==0.15.2+cpu torchaudio==2.0.2+cpu \
+  -f https://download.pytorch.org/whl/cpu/torch_stable.html
+
+# Now install everything else (sentence-transformers will detect CPU torch)
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project files
 COPY . .
 
-# Expose port (default FastAPI port or as needed)
-EXPOSE 7860
+EXPOSE 8000
 
-# Run the API
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
