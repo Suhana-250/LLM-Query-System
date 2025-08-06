@@ -7,11 +7,11 @@ WORKDIR /app
 
 COPY requirements.txt .
 
-# ✅ CPU-only PyTorch
+# ✅ Install CPU-only PyTorch first (without CUDA)
 RUN pip install torch==2.0.1+cpu torchvision==0.15.2+cpu torchaudio==2.0.2+cpu \
   -f https://download.pytorch.org/whl/cpu/torch_stable.html
 
-# Now install everything else (sentence-transformers will detect CPU torch)
+# ✅ Install other dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
