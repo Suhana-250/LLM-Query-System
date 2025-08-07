@@ -12,7 +12,6 @@ async def verify_token(authorization: str = Header(...)):
             detail="Invalid Authorization format. Use 'Bearer <token>'"
         )
     token = authorization.split(" ")[1]
-    print(f"Received token: {token}")
     if token != API_KEY:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
