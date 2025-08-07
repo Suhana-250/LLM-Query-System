@@ -19,14 +19,33 @@ groq_client = Groq(api_key=GROQ_API_KEY)
 embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 # ✅ Download PDF and save temporarily
-def download_pdf(url: str) -> str:
-    response = requests.get(url)
-    if response.status_code != 200:
-        raise Exception("Failed to download document.")
-    
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
-        tmp_file.write(response.content)
-        return tmp_file.name
+import time
+import requests
+
+def download_pdf(url: str, retries: int = 3) -> str:
+    headers = {
+        "User-Agent": "Mozilla/5.0 (compatible; LLMQueryBot/1.0; +https://yourapp.com)"
+    }
+
+    for attempt in range(retries):
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            if response.status_code != 200:
+                raise Exception(f"Failed to download document. Status: {response.status_code}")
+
+            content_type = response.headers.get("Content-Type", "")
+            if "application/pdf" not in content_type:
+                raise Exception("URL did not return a PDF file.")
+
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                tmp_file.write(response.content)
+                return tmp_file.name
+
+        except Exception as e:
+            print(f"Attempt {attempt + 1}/{retries} failed: {e}")
+            time.sleep(2)
+
+    raise Exception("PDF download failed after retries.")
 
 # ✅ Extract text from PDF
 def extract_text_from_pdf(file_path: str) -> str:
